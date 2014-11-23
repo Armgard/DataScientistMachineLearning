@@ -1,0 +1,23 @@
+---
+title: "Assignment Machine Learning"
+author: "Coursera Class Student"
+date: "Sunday, November 23, 2014"
+output: html_document
+---
+
+**Task**
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+```{r}
+library(caret)
+training<-read.csv("pml-training.csv")
+testing<-read.csv("pml-testing.csv")
+subTrain<-createDataPartition(training$classe, p=0.2, list=FALSE)
+subtraining=training[subTrain,]
+
+```
+```{r, eval=FALSE}
+ modelrf<-train(subtraining$classe ~., data= subtraining, method ="rf", trControl=trainControl(number=2, repeats=1))
+```
+
+Ok, I know I sucked :( . Cannot get to run this on my PC. Hope I am able to learn from other solutions. 
