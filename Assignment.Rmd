@@ -1,23 +1,58 @@
 ---
-title: "Assignment Machine Learning"
-author: "Coursera Class Student"
-date: "Sunday, November 23, 2014"
+title: "Corsera Assignment Practical Machine Learning"
+author: "coursera student"
+date: "January 2015"
 output: html_document
 ---
-
-**Task**
-Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+We read the test and the training set:
 
 ```{r}
+train = read.csv("pml-training.csv",row.names=1)
+test  = read.csv("pml-testing.csv", row.names=1)
+```
+We exclude columns that have values missing in the test data. Also we exclude columns 2, 3 and 5 (raw timestamps and new_window) and use this smaller training set. 
+
+```{r}
+avail= !is.na(test[1,])
+avail[c(2,3,5)]=F
+train2=train[,avail]
+```
+
+We fit a model with generalized boosted models:
+
+```{r, message=FALSE}
 library(caret)
-training<-read.csv("pml-training.csv")
-testing<-read.csv("pml-testing.csv")
-subTrain<-createDataPartition(training$classe, p=0.2, list=FALSE)
-subtraining=training[subTrain,]
-
-```
-```{r, eval=FALSE}
- modelrf<-train(subtraining$classe ~., data= subtraining, method ="rf", trControl=trainControl(number=2, repeats=1))
+fitControl= trainControl(method="cv",number=3)
+gbmGrid <-  expand.grid(interaction.depth = 5, n.trees = 500, shrinkage = 0.1)
+gbmFit = train(classe ~ ., data=train2, method="gbm", trControl=fitControl, tuneGrid=gbmGrid)
 ```
 
-Ok, I know I sucked :( . Cannot get to run this on my PC. Hope I am able to learn from other solutions. 
+We show the fit results:
+
+```{r}
+gbmFit
+```
+
+based on the gbm fit. Output probabilities, we can classify the test data
+
+```{r}
+predict(gbmFit, newdata = test, type = "prob")
+```
+
+Probabilities are all > 0.99, so we can have confidence we can predict the class labels. 
+
+
+Finally we are going to write the predictions for the test set individual files, as we need them for output.
+
+```{r}
+answers=as.character(predict(gbmFit, newdata = test))
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)
+```
